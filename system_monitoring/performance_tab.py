@@ -32,6 +32,7 @@ class PerformanceTab:
             axis.set_xlim(0, 50)
             axis.set_ylim(0, 100)
             axis.grid(True)
+            axis.legend(loc='upper right')
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.parent)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -60,8 +61,12 @@ class PerformanceTab:
         self.memory_line.set_data(range(len(self.memory_data)), self.memory_data)
         self.disk_line.set_data(range(len(self.disk_data)), self.disk_data)
 
+        for axis in self.ax:
+            axis.set_xlim(0, max(50, len(self.cpu_data)))
+
         self.canvas.draw()
         self.parent.after(1000, self.update_performance)
+
 
 class AppHistoryTab:
     def __init__(self, parent):
@@ -69,15 +74,21 @@ class AppHistoryTab:
         self.history_tree = ttk.Treeview(parent, columns=("App", "CPU", "Memory"), show="headings")
         for col in ("App", "CPU", "Memory"):
             self.history_tree.heading(col, text=col)
+            self.history_tree.column(col, width=200)
         self.history_tree.pack(fill="both", expand=True, padx=10, pady=10)
         self.track_history()
 
     def track_history(self):
         for row in self.history_tree.get_children():
             self.history_tree.delete(row)
+
         for proc in psutil.process_iter(['name', 'cpu_percent', 'memory_percent']):
             try:
-                self.history_tree.insert('', 'end', values=(proc.info['name'], f"{proc.info['cpu_percent']}%", f"{proc.info['memory_percent']}%"))
+                name = proc.info['name'] or "Unknown"
+                cpu = f"{proc.info['cpu_percent']:.1f}%"
+                mem = f"{proc.info['memory_percent']:.1f}%"
+                self.history_tree.insert('', 'end', values=(name, cpu, mem))
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
+
         self.parent.after(5000, self.track_history)
