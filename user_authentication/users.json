@@ -6,5 +6,9 @@
     "Nidhi": {
         "password": "12345678",
         "role": "user"
+    },
+    "Varuni Balodhi": {
+        "password": "12345",
+        "role": "user"
     }
 }
